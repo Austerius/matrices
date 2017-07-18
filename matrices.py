@@ -3,7 +3,6 @@ import errors
 import itertools  # required for zip_longest function
 import numbers  # required to check number type
 from math import factorial
-decimal.getcontext().prec = 5  # precision of the matrix decimal elements equal to 5 numbers after '.'
 
 
 class Matrix(object):
@@ -264,9 +263,64 @@ class Matrix(object):
             multiplication_list.append(temp_list)
         return Matrix(multiplication_list)
 
-    # TODO need to write method for calculating determinant, based on elementary rows manipulation
-    def matrix_determinant(self):
+    def matrix_determinant(self, precision=2):
+        """ This method calculate determinant of the matrix, using elementary rows manipulation:
+            first - we'll transform our matrix to upper triangular form and then - multiplied her main diagonal elements
+            between themselves to get a determinant
+            'precision' parameter it's number of positions after '.' symbol. It use default roundup from decimal
+            method getcontext().rounding"""
+        if not self.is_square_matrix():  # checking if matrix instance is a square matrix
+            raise errors.WrongDimension("Determinant can be computed only for square matrix")
+        if not isinstance(precision, int):
+            raise errors.WrongInputType("Precision should be an integer number")
+        det = decimal.Decimal(1)  # initializing variable for determinant
+        if self.m == 1:
+            det = self.A[0][0]  # for square matrix with one row determinant is equal to her single element
+        elif self.m == 2:  # for rank 2 matrix we will use common formula
+            det = self.A[0][0]*self.A[1][1] - self.A[0][1]*self.A[1][0]
+        else:
+            transform_matrix = []  # creating temporary matrix for transformation operations
+            for rows in self.A:
+                transform_matrix.append(rows)
+            for i in range(0, self.m):
+                for j in range(0, self.m):
+                    # need to transform all transform_matrix[j][i] elements to 0(except j == i element)
+                    if i == j:
+                        while transform_matrix[i][i] == 0:
+                            for k in range(i+1, self.m):
+                                if transform_matrix[k][k] != 0:
+                                    # swapping rows of transform_matrix,
+                                    # so we position non zero element on main diagonal
+                                    temp = transform_matrix.pop(i)
+                                    temp2 = transform_matrix.pop(k-1)
+                                    transform_matrix.insert(i, temp2)
+                                    transform_matrix.insert(k, temp)
+                                    det *= (-1)  # switching determinant sight
+                                elif transform_matrix[k][k] == 0 and k == (self.m - 1):
+                                    return 0  # we have 0 on main diagonal, so determinant equal to 0
+                        det *= transform_matrix[i][i]
+                    elif j < i:
+                        continue
+                    else:
+                        if transform_matrix[j][i] != 0:
+                            # we need to subtract a multiplied by scalar transform_matrix i-row from j-row
+                            # so element [j][i] will be equal to zero
+                            temp_scalar = transform_matrix[j][i]/transform_matrix[i][i]
+                            temp_list = []
+                            for arg1, arg2 in zip(transform_matrix[i], transform_matrix[j]):
+                                temp_list.append(arg2 - arg1*temp_scalar)
+                            transform_matrix.pop(j)  # deleting old j-row
+                            transform_matrix.insert(j, temp_list)  # inserting new, transformed j-row
+        # 10^-2 will be equal to 0.01(to positions after '.') and so on
+        try:
+            det = det.quantize(decimal.Decimal(str(10**-precision)))
+        except decimal.InvalidOperation:
+            pass  # just return a 'raw' value if precision went out of bounds
+        return det
+
+    def _matrix_determinant(self):
         """ Here we will compute a determinant for square matrix self.A recursively
+            It's a good example 'how not to do this'
             Better to use this for 3 and less dimensions matrix (or up to 6 dimensions; for calculating 8 dimensional
             matrix this method will need several minutes)"""
         if not self.is_square_matrix():
@@ -282,16 +336,16 @@ class Matrix(object):
                     self.A[1][0]*self.A[0][1]*self.A[2][2] - self.A[2][1]*self.A[1][2]*self.A[0][0]
         else:
             det += self._matrix_determinant_n(self.A)
-            return det/factorial(self.m - 3)  # for some reason we have deviation = (n-3)! where n - matrix dimension
+            return det/factorial(self.m - 3)  # for 'some reason' we have deviation = (n-3)! where n - matrix dimension
         return det
 
     def _matrix_determinant_n(self, matrix_n):
         """ Private method, that supposed to calculate determinant for n-dimensional matrix recursively
-            Its used in matrix_determinant method, when dimension of matrix greater than 3"""
+            Its used in _matrix_determinant method, when dimension of matrix greater than 3"""
         det = 0
         dimension = len(matrix_n)
         if dimension == 3:
-            det = Matrix(matrix_n).matrix_determinant()
+            det = Matrix(matrix_n)._matrix_determinant()
         while dimension > 3:
             for i in range(0, len(matrix_n)):
                 temp_matrix_list = []
@@ -354,6 +408,7 @@ class IdentityMatrix(Matrix):
         super(IdentityMatrix, self).__init__(columns=dimension, rows=dimension, list_of_lists=self.identity_matrix)
 
 if __name__ == "__main__":
+    # Just some quick testing, will be deleted soon
     matrix = [[1, 2, 3], [4, 5, 6.789]]
     A = Matrix(matrix, 2, 3)
     A.matrix_show()
@@ -381,19 +436,19 @@ if __name__ == "__main__":
     F.matrix_show()
     print("="*50)
     G = Matrix([[3]])
-    print(G.matrix_determinant())
+    print(G._matrix_determinant())
     J = Matrix([[1, 4],
                 [3, 6]])
-    print(J.matrix_determinant())
+    print(J._matrix_determinant())
     K = Matrix([[5, -2, 1],
                 [3, 1, -4],
                 [6, 0, -3]])
-    print(K.matrix_determinant())
+    print(K._matrix_determinant())
     L = Matrix([[3, 5, 7, 8],
                 [-1, 7, 0, 1],
                 [0, 5, 3, 2],
                 [1, -1, 7, 4]])
-    print(L.matrix_determinant())
+    print(L._matrix_determinant())
     M = Matrix([[1, 2, 0, 0, 0],
                 [3, 2, 3, 0, 0],
                 [0, 4, 3, 4, 0],
@@ -404,15 +459,15 @@ if __name__ == "__main__":
                 [0, 15, 35, 0, 0],
                 [0, -1, -11, -2, 1],
                 [-2, -2, 3, 0, -2]])
-    print(M.matrix_determinant())
-    print(N.matrix_determinant())
+    print(M._matrix_determinant())
+    print(N._matrix_determinant())
     P = Matrix([[1, 2, 3, 0, 0, 0],
                 [4, 3, 0, 0, -1, -2],
                 [1, 2, 1, 1, 1, 0],
                 [3, -2, -2, 0, 0, 0],
                 [4, 1, -1, -5, 5, 0],
                 [0, 0, 6, 5, 4, 0]])
-    print(P.matrix_determinant())
+    print(P._matrix_determinant())
     R = Matrix([[2, 0, 4, 0, 5, 0, 1],
                 [0, 3, -5, -1, 2, 0, 3],
                 [4, 5, 1, 1, 2, 3, 0],
@@ -420,8 +475,17 @@ if __name__ == "__main__":
                 [2, 0, 3, 4, 1, 3, 0],
                 [0, -5, -5, 6, 1, 4, 0],
                 [3, 0, 4, -1, 2, 0, 7]])
+    print(R._matrix_determinant())
+    print(matrix[0])
+    print(J.matrix_determinant())
+    print(K.matrix_determinant())
+    print(L.matrix_determinant())
+    print(M.matrix_determinant())
+    print(N.matrix_determinant())
+    print(P.matrix_determinant(60))
     print(R.matrix_determinant())
-
+    RT = R.matrix_transposition()
+    print(RT.matrix_determinant())
 
 
 
