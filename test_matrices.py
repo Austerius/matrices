@@ -334,5 +334,6 @@ class TestIdentityMatrix(unittest.TestCase):
         self.assertTrue(A.is_diagonal_matrix())
         self.assertTrue(A.is_square_matrix())
         self.assertTrue(A.matrix_is_equal(B))
+        # transpose identity matrix ill be equal to self
         C = A.matrix_transposition()
         self.assertTrue(C.matrix_is_equal(A))
