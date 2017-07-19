@@ -99,21 +99,15 @@ class Matrix(object):
            We presume, that diagonal matrix has to be also a square matrix
         """
         if self.is_square_matrix():
-            # TODO rewrite, using zip()
-            j = 0
-            i = 0
-            for columns in self.A:
-                for row in columns:
-                    if row == 0 and i == j:
+            for i in range(0, self.m):
+                for j in range(0, self.n):
+                    if self.A[i][j] == 0 and i == j:
                         return False
-                    elif row != 0 and i != j:
+                    if self.A[i][j] != 0 and i != j:
                         return False
-                    j += 1
-                i += 1
-                j = 0
             return True
         else:
-            #  Here we raised an error because non square matrices does have main diagonal, so we explicitly warned
+            #  Here we raised an error because non square matrices doesnt have main diagonal, so we explicitly warned
             #  users about needs of square type matrix, but we rewrote it to return just False
             return False
             # raise errors.WrongInputType("Need a square matrix here")
@@ -122,6 +116,7 @@ class Matrix(object):
         """ Checking if matrix is identity matrix: diagonal square matrix, where all elements of the main
             diagonal equals to one. Return True if so
         """
+        # it's one way to implement this method, but better example will be 'is_diagonal_matrix' implementation
         if self.is_diagonal_matrix():
             i = 0
             j = 0
