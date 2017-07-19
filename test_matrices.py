@@ -11,7 +11,6 @@ class TestMatrix(unittest.TestCase):
             B = matrices.Matrix([[1, 2], [3, 4, 5]])
         with self.assertRaises(errors.WrongDimension):
             C = matrices.Matrix([[1, 2, 3], [4, 5]])
-        # self.assertTrue(A)
 
     def test_2(self):
         """Checking for not numeric type"""
@@ -147,6 +146,14 @@ class TestMatrix(unittest.TestCase):
         AM = matrices.Matrix([[-2, -4], [5, 7]])
         Am = A.multiply_by_number(-1)
         self.assertTrue(Am.matrix_is_equal(AM))
+        # lets try to mess with precision
+        with self.assertRaises(errors.WrongDimension):
+            I.multiply_by_number(22, -57)
+        with self.assertRaises(errors.WrongInputType):
+            I.multiply_by_number(-.78, "fg")
+        # is Am still equal to AM even with precision = 20?
+        Am = A.multiply_by_number(-1, 20)
+        self.assertTrue(Am.matrix_is_equal(AM))
 
     def test_15(self):
         """Testing subtraction method"""
@@ -171,10 +178,15 @@ class TestMatrix(unittest.TestCase):
         """Testing division by number method"""
         A = matrices.Matrix([[0.0, 0.3, 0.6], [-0.6, -0.3, 1.2]])
         AD = matrices.Matrix([[0, 1, 2], [-2, -1, 4]])
-        ad = A.divide_by_number(0.3)
+        ad = A.divide_by_number(0.3, 3)
         self.assertTrue(ad.matrix_is_equal(AD))
         Am = A.multiply_by_number(1/0.3)
         self.assertTrue(Am.matrix_is_equal(ad))
+        # now lets higher up precision to 19 for false result
+        # higher value of 'precision' doesn't mean better result, try to stick to reasonable number
+        ad = A.divide_by_number(0.3, 19)
+        self.assertFalse(ad.matrix_is_equal(AD))
+
         C = matrices.Matrix([[4, 6, 8], [56, 44, 32]])
         CD = matrices.Matrix([[2, 3, 4], [28, 22, 16]])
         Cd = C.divide_by_number(2)
@@ -210,6 +222,92 @@ class TestMatrix(unittest.TestCase):
                              [3, 2, 1]])
         CD = C.matrix_multiplication(D)
         DC = D.matrix_multiplication(C)
+
+    def test_18(self):
+        """ testing matrix_determinant method"""
+        A = matrices.Matrix([[1, 4],
+                             [3, 6]])
+        B = matrices.Matrix([[5, -2, 1],
+                             [3, 1, -4],
+                             [6, 0, -3]])
+        self.assertEqual(A.matrix_determinant(0), -6)
+        self.assertEqual(B.matrix_determinant(), 9)
+        C = matrices.Matrix([[3, 5, 7, 8],
+                             [-1, 7, 0, 1],
+                             [0, 5, 3, 2],
+                             [1, -1, 7, 4]])
+        self.assertEqual(C.matrix_determinant(5), 122)
+        D = matrices.Matrix([[1, 2, 0, 0, 0],
+                             [3, 2, 3, 0, 0],
+                             [0, 4, 3, 4, 0],
+                             [0, 0, 5, 4, 5],
+                             [0, 0, 0, 6, 5]])
+        self.assertEqual(D.matrix_determinant(), 640)
+        E = matrices.Matrix([[0, 6, -2, -1, 5],
+                             [0, 0, 0, -9, -7],
+                             [0, 15, 35, 0, 0],
+                             [0, -1, -11, -2, 1],
+                             [-2, -2, 3, 0, -2]])
+        self.assertEqual(E.matrix_determinant(), 2480)
+        Em = matrices.Matrix([[0, 6, -2, -1, 5],
+                              [0, 0, 0, -9, -7],
+                              [0, 15, 35, 0, 0],
+                              [0, -1, -11, -2, 1],
+                              [0, -2, 3, 0, -2]])
+        # determinant of matrix with 0 on main diagonal should be a 0
+        self.assertEqual(Em.matrix_determinant(), 0)
+        F = matrices.Matrix([[1, 2, 3, 0, 0, 0],
+                             [4, 3, 0, 0, -1, -2],
+                             [1, 2, 1, 1, 1, 0],
+                             [3, -2, -2, 0, 0, 0],
+                             [4, 1, -1, -5, 5, 0],
+                             [0, 0, 6, 5, 4, 0]])
+        self.assertEqual(F.matrix_determinant(), -2346)
+        G = matrices.Matrix([[2, 0, 4, 0, 5, 0, 1],
+                             [0, 3, -5, -1, 2, 0, 3],
+                             [4, 5, 1, 1, 2, 3, 0],
+                             [2, -4, 4, 4, 4, 2, 2],
+                             [2, 0, 3, 4, 1, 3, 0],
+                             [0, -5, -5, 6, 1, 4, 0],
+                             [3, 0, 4, -1, 2, 0, 7]])
+        GT = G.matrix_transposition()
+        self.assertEqual(G.matrix_determinant(), 4030)
+        # determinant of the transpose matrix should be equal to her original determinant
+        self.assertEqual(G.matrix_determinant(), GT.matrix_determinant())
+        I = matrices.Matrix([[1, 2, 3],
+                             [2, 4, 6],
+                             [7, 8, 9]])
+        # determinant of matrix with proportional rows should be a zero
+        self.assertEqual(I.matrix_determinant(), 0)
+        # and some more sets of matrices
+        a = matrices.Matrix([[1, -2, 4],
+                             [-5, 2, 0],
+                             [1, 0, 3]])
+        self.assertEqual(a.matrix_determinant(), -32)
+        # det(a * B) = det(a) * det(B)
+        aB = a.matrix_multiplication(B)
+        self.assertEqual(aB.matrix_determinant(), -288)
+        # big one incoming (13x13):
+        F = matrices.Matrix([[24, -13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [-24, 46, -24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [0, -33, 64, -33, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, -40, 78, -40, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, -45, 88, -45, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, -48, 94, -48, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, -49, 96, -49, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, -48, 94, -48, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0, -45, 88, -45, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0, 0, -40, 78, -40, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0, 0, 0, -33, 64, -33, 0],
+                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -24, 46, -24],
+                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, -13]])
+        self.assertEqual(F.matrix_determinant(), 93383110850641920000)
+        o = matrices.ZeroMatrix(4, 4)
+        # determinant for zero matrix = 0
+        self.assertEqual(o.matrix_determinant(), 0)
+        i = matrices.IdentityMatrix(4)
+        # determinant of identity matrix equal to 1
+        self.assertEqual(i.matrix_determinant(), 1)
 
 
 class TestZeroMatrix(unittest.TestCase):

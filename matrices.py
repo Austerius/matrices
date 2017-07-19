@@ -199,10 +199,12 @@ class Matrix(object):
             list_matrix_add.append(temp_list)
         return Matrix(list_matrix_add)
 
-    def multiply_by_number(self, number):
+    def multiply_by_number(self, number, precision=2):
         """ Method for scalar multiplication matrix A by parameter 'number'(should be a numeric type)
             For multiply matrix by some number, we actually need to multiply all her elements by this number
-            After we done with multiplication, a new matrix will be returned"""
+            After we done with multiplication, a new matrix will be returned
+            'precision' parameter is optional and will point to a number or positions after '.' symbol
+            precision should be a positive, integer type number"""
         if not isinstance(number, numbers.Number):
             raise errors.WrongInputType("Parameter 'number' should be a numeric type!")
         # converting number to decimal format for consistence
@@ -210,13 +212,24 @@ class Matrix(object):
             number_dec = decimal.Decimal(repr(number))
         else:
             number_dec = number
+        precision = self._precision_check(precision)
         return_list = []
         for rows in self.A:
             temp_list = []
             for arg in rows:
-                temp_list.append(arg*number_dec)
+                try:
+                    temp_list.append((arg*number_dec).quantize(decimal.Decimal(str((10**-precision)))))
+                except decimal.InvalidOperation:
+                    raise errors.WrongDimension("This is to much. Try to low down precision value")
             return_list.append(temp_list)
         return Matrix(return_list)
+
+    def _precision_check(self, pres):
+        """ Private method for checking input for precision value"""
+        # method get a general check in test_14 of TestMatrix() class
+        if not isinstance(pres, int):
+            raise errors.WrongInputType("Precision should be an integer number")
+        return abs(pres)
 
     def matrix_subtraction(self, matrix_for_subtract):
         """ THis method will subtract incoming matrix(parameter 'matrix_for_subtract' which is Matrix type)
@@ -238,10 +251,12 @@ class Matrix(object):
             list_matrix_subtract.append(temp_list)
         return Matrix(list_matrix_subtract)
 
-    def divide_by_number(self, number):
+    def divide_by_number(self, number, precision=2):
         """ Dividing matrix self.A by 'number' and returning new matrix
             Basically, we need to call multiply_by_number method with income parameter: 1/number """
-        return self.multiply_by_number(1/number)
+        precision = self._precision_check(precision)
+        number_for_division = decimal.Decimal(1/number).quantize(decimal.Decimal(str(10**-precision)))
+        return self.multiply_by_number(number_for_division, precision=precision)
 
     def matrix_multiplication(self, matrix_for_multiplication):
         """ Method for multiplying two matrices. Input parameter 'matrix_for_multiplication' should be Matrix()
@@ -271,8 +286,7 @@ class Matrix(object):
             method getcontext().rounding"""
         if not self.is_square_matrix():  # checking if matrix instance is a square matrix
             raise errors.WrongDimension("Determinant can be computed only for square matrix")
-        if not isinstance(precision, int):
-            raise errors.WrongInputType("Precision should be an integer number")
+        precision = self._precision_check(precision)
         det = decimal.Decimal(1)  # initializing variable for determinant
         if self.m == 1:
             det = self.A[0][0]  # for square matrix with one row determinant is equal to her single element
@@ -284,11 +298,13 @@ class Matrix(object):
                 transform_matrix.append(rows)
             for i in range(0, self.m):
                 for j in range(0, self.m):
-                    # need to transform all transform_matrix[j][i] elements to 0(except j == i element)
-                    if i == j:
-                        while transform_matrix[i][i] == 0:
+                    # need to transform all transform_matrix[j][i] elements to 0(except j =< i element)
+                    if j == i and transform_matrix[i][j] == 0:
+                        if i == (self.m - 1):
+                            return 0
+                        else:
                             for k in range(i+1, self.m):
-                                if transform_matrix[k][k] != 0:
+                                if transform_matrix[k][i] != 0:
                                     # swapping rows of transform_matrix,
                                     # so we position non zero element on main diagonal
                                     temp = transform_matrix.pop(i)
@@ -296,26 +312,27 @@ class Matrix(object):
                                     transform_matrix.insert(i, temp2)
                                     transform_matrix.insert(k, temp)
                                     det *= (-1)  # switching determinant sight
-                                elif transform_matrix[k][k] == 0 and k == (self.m - 1):
+                                    break
+                                if transform_matrix[k][i] == 0 and k == (self.m - 1) and transform_matrix[i][j] == 0:
                                     return 0  # we have 0 on main diagonal, so determinant equal to 0
+                    if i == j and transform_matrix[i][j] != 0:
                         det *= transform_matrix[i][i]
-                    elif j < i:
+                    if j < i:
                         continue
-                    else:
-                        if transform_matrix[j][i] != 0:
-                            # we need to subtract a multiplied by scalar transform_matrix i-row from j-row
-                            # so element [j][i] will be equal to zero
-                            temp_scalar = transform_matrix[j][i]/transform_matrix[i][i]
-                            temp_list = []
-                            for arg1, arg2 in zip(transform_matrix[i], transform_matrix[j]):
-                                temp_list.append(arg2 - arg1*temp_scalar)
-                            transform_matrix.pop(j)  # deleting old j-row
-                            transform_matrix.insert(j, temp_list)  # inserting new, transformed j-row
+                    if j > i and transform_matrix[j][i] != 0:
+                        # we need to subtract a multiplied by scalar transform_matrix i-row from j-row
+                        # so element [j][i] will be equal to zero
+                        temp_scalar = transform_matrix[j][i]/transform_matrix[i][i]
+                        temp_list = []
+                        for arg1, arg2 in zip(transform_matrix[i], transform_matrix[j]):
+                            temp_list.append(arg2 - arg1*temp_scalar)
+                        transform_matrix.pop(j)  # deleting old j-row
+                        transform_matrix.insert(j, temp_list)  # inserting new, transformed j-row
         # 10^-2 will be equal to 0.01(to positions after '.') and so on
         try:
             det = det.quantize(decimal.Decimal(str(10**-precision)))
         except decimal.InvalidOperation:
-            pass  # just return a 'raw' value if precision went out of bounds
+            raise errors.WrongDimension("This is to much. Try to low down precision value")
         return det
 
     def _matrix_determinant(self):
@@ -435,58 +452,20 @@ if __name__ == "__main__":
     F = D.multiply_by_number(2)
     F.matrix_show()
     print("="*50)
-    G = Matrix([[3]])
-    print(G._matrix_determinant())
-    J = Matrix([[1, 4],
-                [3, 6]])
-    print(J._matrix_determinant())
-    K = Matrix([[5, -2, 1],
-                [3, 1, -4],
-                [6, 0, -3]])
-    print(K._matrix_determinant())
-    L = Matrix([[3, 5, 7, 8],
-                [-1, 7, 0, 1],
-                [0, 5, 3, 2],
-                [1, -1, 7, 4]])
-    print(L._matrix_determinant())
-    M = Matrix([[1, 2, 0, 0, 0],
-                [3, 2, 3, 0, 0],
-                [0, 4, 3, 4, 0],
-                [0, 0, 5, 4, 5],
-                [0, 0, 0, 6, 5]])
-    N = Matrix([[0, 6, -2, -1, 5],
-                [0, 0, 0, -9, -7],
-                [0, 15, 35, 0, 0],
-                [0, -1, -11, -2, 1],
-                [-2, -2, 3, 0, -2]])
-    print(M._matrix_determinant())
-    print(N._matrix_determinant())
-    P = Matrix([[1, 2, 3, 0, 0, 0],
-                [4, 3, 0, 0, -1, -2],
-                [1, 2, 1, 1, 1, 0],
-                [3, -2, -2, 0, 0, 0],
-                [4, 1, -1, -5, 5, 0],
-                [0, 0, 6, 5, 4, 0]])
-    print(P._matrix_determinant())
-    R = Matrix([[2, 0, 4, 0, 5, 0, 1],
-                [0, 3, -5, -1, 2, 0, 3],
-                [4, 5, 1, 1, 2, 3, 0],
-                [2, -4, 4, 4, 4, 2, 2],
-                [2, 0, 3, 4, 1, 3, 0],
-                [0, -5, -5, 6, 1, 4, 0],
-                [3, 0, 4, -1, 2, 0, 7]])
-    print(R._matrix_determinant())
-    print(matrix[0])
-    print(J.matrix_determinant())
-    print(K.matrix_determinant())
-    print(L.matrix_determinant())
-    print(M.matrix_determinant())
-    print(N.matrix_determinant())
-    print(P.matrix_determinant(60))
-    print(R.matrix_determinant())
-    RT = R.matrix_transposition()
-    print(RT.matrix_determinant())
-
+    I = Matrix([[1, 2, 3],
+                [2, 4, 6],
+                [7, 8, 9]])
+    print(I.matrix_determinant())
+    Em = Matrix([[0, 6, -2, -1, 5],
+                 [0, 0, 0, -9, -7],
+                 [0, 15, 35, 0, 0],
+                 [0, -1, -11, -2, 1],
+                 [-2, -2, 3, 0, -2]])
+    C = Matrix([[1, 0, 3],
+                [3, 0, 0],
+                [5, 0, 5]])
+    print(Em.matrix_determinant())
+    print(C.matrix_determinant())
 
 
 
