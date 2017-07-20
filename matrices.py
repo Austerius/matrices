@@ -278,7 +278,7 @@ class Matrix(object):
             first - we'll transform our matrix to upper triangular form and then - multiplied her main diagonal elements
             between themselves to get a determinant
             'precision' parameter it's number of positions after '.' symbol. It use default roundup from decimal
-            method getcontext().rounding"""
+            method getcontext().rounding. (recommending rounding=ROUND_HALF_EVEN, which is a default)"""
         if not self.is_square_matrix():  # checking if matrix instance is a square matrix
             raise errors.WrongDimension("Determinant can be computed only for square matrix")
         precision = self._precision_check(precision)
@@ -330,6 +330,118 @@ class Matrix(object):
             raise errors.WrongDimension("This is to much. Try to low down precision value")
         return det
 
+    def matrix_inverse(self, precision=3):
+        """ Here we will try to find an inverse matrix to self.A using Gauss-Jordan method(elementary row operation)
+            The return type of 'matrix_inverse' is a Matrix()"""
+        if not self.is_square_matrix():  # checking if matrix instance is a square matrix
+            raise errors.WrongDimension("Matrix should be a square to compute her inverse")
+        if self.matrix_determinant() == 0:
+            raise errors.WrongInputType("Determinant is Zero. This matrix doesnt have inverse matrix")
+        precision = self._precision_check(precision)
+        # we will need an instance of identity matrix for this method
+        identity_matrix = IdentityMatrix(self.m)
+        # unpacking into list of lists:
+        inverse_matrix = []
+        matrix_for_manipulations = []
+        for rows1, rows2 in zip(identity_matrix, self.A):
+            temp1 = []
+            temp2 = []
+            for arg1, arg2 in zip(rows1, rows2):
+                temp1.append(arg1)
+                temp2.append(arg2)
+            inverse_matrix.append(temp1)
+            matrix_for_manipulations.append(temp2)
+        # first, we will transform 'matrix_for_manipulations' to upper triangular form
+        # also, we will duplicate all elementary row operations on 'inverse_matrix'
+        for i in range(0, self.m):
+            for j in range(0, self.m):
+                # here we 'eliminate' zeroes on a main diagonal
+                if i == j and matrix_for_manipulations[i][j] == 0:
+                    # we are not checking for special occasions with whole row or column equal to zero
+                    # since in that case determinant would be a zero, and we already know that it's not true
+                    for k in range(i+1, self.m):
+                        if matrix_for_manipulations[k][i] != 0:
+                            # switching rows in matrices
+                            first_temp1 = matrix_for_manipulations.pop(i)
+                            first_temp2 = matrix_for_manipulations.pop(k-1)
+                            matrix_for_manipulations.insert(i, first_temp2)
+                            matrix_for_manipulations.insert(k, first_temp1)
+                            # duplicated operations for identity matrix
+                            first_temp3 = inverse_matrix.pop(i)
+                            first_temp4 = inverse_matrix.pop(k-1)
+                            inverse_matrix.insert(i, first_temp4)
+                            inverse_matrix.insert(k, first_temp3)
+                if j < i:
+                    continue
+                if j > i and matrix_for_manipulations[j][i] != 0:
+                    # here we need to subtract multiplied by scalar 'i' element from 'j' element,
+                    # so as a result we will get '0' on a position beneath main diagonal([i][i])
+                    # the 'scalar' can be found by dividing [j][i] element by [i][i] element
+                    temp_scalar1 = matrix_for_manipulations[j][i]/matrix_for_manipulations[i][i]
+                    # now we use our 'precision' for scalars:
+                    try:
+                        temp_scalar1 = temp_scalar1.quantize(decimal.Decimal(str(10**-precision)))
+                        temp_list1 = []
+                        temp_list2 = []
+                        for arg1, arg2, arg3, arg4 in zip(matrix_for_manipulations[i], matrix_for_manipulations[j],
+                                                          inverse_matrix[i], inverse_matrix[j]):
+                            temp_list1.append((arg2 - (arg1*temp_scalar1)).quantize(decimal.Decimal(str(10**-precision))))
+                            temp_list2.append((arg4 - arg3*temp_scalar1).quantize(decimal.Decimal(str(10**-precision))))
+                    except decimal.InvalidOperation:
+                        raise errors.WrongDimension("This is to much. Try to low down precision value")
+                    # here we replacing row [j] with new, modified row
+                    matrix_for_manipulations.pop(j)
+                    matrix_for_manipulations.insert(j, temp_list1)
+                    # and same thing for future inverse matrix
+                    inverse_matrix.pop(j)
+                    inverse_matrix.insert(j, temp_list2)
+        # so, yeah, now we have upper triangular matrix
+        # print('*'*45)
+        # for row in matrix_for_manipulations:
+        #     print(row)
+        # print('*'*45)
+        # next step it's to start from lower right conner([self.m][self.m]) and move up, multiplying each row by
+        # appropriate number(inverse one in this situation), so we would get a '1' on a diagonal
+        # Also, we need to 'eliminate' all others number, which are not on main diagonal
+        for i in range(self.m - 1, -1, -1):
+            # making '1' on diagonal
+            temp_scalar2 = decimal.Decimal(1)/matrix_for_manipulations[i][i]
+            try:
+                temp_scalar2 = temp_scalar2.quantize(decimal.Decimal(str(10**-precision)))
+                temp_list1 = []
+                temp_list2 = []
+                for arg1, arg2 in zip(matrix_for_manipulations[i], inverse_matrix[i]):
+                    temp_list1.append((arg1*temp_scalar2).quantize(decimal.Decimal(str(10**-precision))))
+                    temp_list2.append((arg2*temp_scalar2).quantize(decimal.Decimal(str(10**-precision))))
+            except decimal.InvalidOperation:
+                raise errors.WrongDimension("This is to much. Try to low down precision value")
+            matrix_for_manipulations.pop(i)
+            matrix_for_manipulations.insert(i, temp_list1)
+            inverse_matrix.pop(i)
+            inverse_matrix.insert(i, temp_list2)
+            for k in range(i-1, -1, -1):
+                if matrix_for_manipulations[k][i] != 0:
+                    temp_scalar3 = matrix_for_manipulations[k][i]/matrix_for_manipulations[i][i]
+                    try:
+                        temp_scalar3 = temp_scalar3.quantize(decimal.Decimal(str(10**-precision)))
+                        second_temp_list1 = []
+                        second_temp_list2 = []
+                        for ar1, ar2, ar3, ar4 in zip(matrix_for_manipulations[i], matrix_for_manipulations[k],
+                                                      inverse_matrix[i], inverse_matrix[k]):
+                            second_temp_list1.append((ar2 - ar1*temp_scalar3).quantize(decimal.Decimal(str(10**-precision))))
+                            second_temp_list2.append((ar4 - ar3*temp_scalar3).quantize(decimal.Decimal(str(10**-precision))))
+                    except decimal.InvalidOperation:
+                        raise errors.WrongDimension("This is to much. Try to low down precision value")
+                    matrix_for_manipulations.pop(k)
+                    matrix_for_manipulations.insert(k, second_temp_list1)
+                    inverse_matrix.pop(k)
+                    inverse_matrix.insert(k, second_temp_list2)
+        # print('*'*90)
+        # for row in matrix_for_manipulations:
+        #     print(row)
+        # print('*'*90)
+        return Matrix(inverse_matrix)
+
     def _matrix_determinant(self):
         """ Here we will compute a determinant for square matrix self.A recursively
             It's a good example 'how not to do this'
@@ -376,6 +488,15 @@ class Matrix(object):
         return det
     # def __getitem__(self, item):
     #     return self.A
+
+    def matrix_unpack(self):
+        """ Method for unpacking class instance of Matrix() into list of lists: [[],[]]
+            Returning type - list """
+        # TODO: need to add option for unpacking into float list and other formats
+        matrix_list = []
+        for rows in self.A:
+            matrix_list.append(rows)
+        return matrix_list
 
     def matrix_show(self):
             """ Simple method for printing a matrix
@@ -461,7 +582,11 @@ if __name__ == "__main__":
                 [5, 0, 5]])
     print(Em.matrix_determinant())
     print(C.matrix_determinant())
-
-
+    print('&'*70)
+    print(Em.matrix_inverse().matrix_show())
+    invEm = Em.matrix_inverse()
+    multi = invEm.matrix_multiplication(Em)
+    print("+"*60)
+    multi.matrix_show()
 
 
