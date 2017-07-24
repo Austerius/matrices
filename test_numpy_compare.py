@@ -317,7 +317,7 @@ class CustomTests(unittest.TestCase):
         # Ok, numpy won this with great margin, but... the thing is: we calculated determinant in our inverse method
         # and it took 21.71 second for previous test to do that. So, actual, the inverting procedure
         # was less, than a second(anyway - it's not count without determinant check)
-        det_cycles = 100000
+        det_cycles = 1
         numA = np.array(self.matrix_a)
         start_time = time.perf_counter()
         for i in range(1, det_cycles):
