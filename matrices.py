@@ -194,6 +194,31 @@ class Matrix(object):
             list_matrix_add.append(temp_list)
         return Matrix(list_matrix_add)
 
+    def add_number(self, number):
+        """ This method will add a scalar 'number' to the current matrix.
+            Actually, following matrices theory: there is no such operation as 'adding a scalar to the matrix',
+            but, in our case, we considering a scalar to be a matrix filled with the same number(parameter 'number').
+            Also, this 'scalar' matrix will have same dimensions as a matrix, we performing addition operation on.
+            Method returning a new Matrix()"""
+        # first, checking if 'number' is a numeric type:
+        if not isinstance(number, numbers.Number):
+            raise errors.WrongElementType("Parameter 'number' should be a numeric type!")
+        if not isinstance(number, decimal.Decimal):
+            number = decimal.Decimal(repr(number))  # need to convert (if) float value to decimal
+        addition_matrix = []
+        for rows in self.A:
+            temp_list = []
+            for arg in rows:
+                temp_list.append(arg+number)
+            addition_matrix.append(temp_list)
+        return Matrix(addition_matrix)
+
+    def subtract_number(self, number):
+        """ This method will subtract a scalar parameter 'number' from the current matrix.
+            For more information - check add_number doc_string.
+            Returning value - new Matrix() class """
+        return self.add_number(number * (-1))  # well, subtraction it's an addition where number has an opposite sign
+
     def multiply_by_number(self, number, precision=2):
         """ Method for scalar multiplication matrix A by parameter 'number'(should be a numeric type)
             For multiply matrix by some number, we actually need to multiply all her elements by this number
@@ -507,14 +532,23 @@ class Matrix(object):
 
 
 class ZeroMatrix(Matrix):
-    """ class for initialization zero matrix"""
-    def __init__(self, rows, columns):
+    """ class for initialization zero matrix
+        rows - number of rows in the future matrix
+        columns  - number of columns in the future matrix
+        Also, you can populate matrix with same number just by explicitly defining parameter 'number'.
+        For example: if you need a 3x2 matrix, where all elements equal to 4, use ZeroMatrix with optional
+        parameter 'number=4' - ZeroMatrix(3, 2, number=4)
+    """
+    def __init__(self, rows, columns, number=0):
         self.zero_matrix = []
+        if not isinstance(number, numbers.Number):
+            raise errors.WrongElementType("Parameter 'number' should be a numeric type!")
+        self.n = number
         try:
             for i in range(0, rows):
                 temp = []
                 for j in range(0, columns):
-                    temp.append(0)
+                    temp.append(self.n)
                 self.zero_matrix.append(temp)
         except TypeError:
             raise errors.WrongInputType("Columns and rows should be an integer type")

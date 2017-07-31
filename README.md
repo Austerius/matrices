@@ -1,8 +1,8 @@
 # matrices
 matrices repository was created to provide basic operation on matrices: 
 addition, multiplication, transposition, reversion etc(check all operation below). 
-Project, mostly, has educational purpose and will be usfull for students(it contains examples how to implement matrices
-operation in python, and also examples of  posible pitfalls due to 'bad'  implementation). 
+Project, mostly, has educational purpose and will be useful for students(it contains examples how to implement matrices
+operation in python, and also examples of  possible pitfalls due to 'bad'  implementation). 
 Need to mention, that main script('matrices.py') follow PEP8 convention. 
 <p>To use 'matrices' in your own project - just copy 'matrices.py' and 'errors.py' in your project directory. 
 Then, use import statement like this:</p> 
@@ -65,11 +65,24 @@ It also has a supplementary parameter of a precision with a default value equal 
 Returns an instance of new Matrix() </li>
 <i>B = A.matrix_inverse()</i><br/>
 <i>B = A.matrix_inverse(precision)</i>
+<li><b>add_number</b> - adding a number to a matrix. Number, in this case, could be represent as a matrix, consist of the same number. 
+That matrix, also, will  have appropriate dimension for addition operation.
+Note, that you can add a number to a matrix but not a vise versa. Returning type - Matrix().  
+ Example of calling the method:</li>
+<i>B = A.add_number(k)</i>, where k - numeric type.<br/>
+<li><b>subtract_number</b> - method for subtracting number from a matrix. 
+ This method is similar to add_number in his concept. Like in add_number you  can't subtract matrix from a number. 
+  Returning type - Matrix(). Example of calling:   </li>
+<i>B = A.subtract_number(k)</i>, where k is a numeric type.</br> 
 <li><b>matrix_show</b> - method for printing current matrix</li>
 <i>A.matrix_show()</i>
 <p>If you want to initialize a <b>Zero matrix</b> with a given sizes - use a child class of Matrix: ZeroMatrix().
-It takes 2 parameters: number of rows('m' - integer number) and number of columns('n' integer number). Example:</p>
-<i>O = matrices.ZeroMatrix(m, n)</i>
+It takes 2 'must be' parameters(plus one optional): number of rows('m' - integer number) and number of columns('n' integer number). Example:</p>
+<i>O = matrices.ZeroMatrix(m, n)</i><br/>
+<p>If you need to <b>fill the matrix with same number</b>, different from zero - 
+use optional parameter 'number' of ZeroMatrix() class, like this:<br/>
+ <i>O = matrices.ZeroMatrix(m, n, number=k)</i>, where k - numeric type. For example:<br/>
+ <i>O = matrices.ZeroMatrix(2, 2, number=-4.2)</i> will create 2 by 2 matrix filled with number -4.2</p>
 <p>For initializing an <b>Identity matrix</b> - use subclass IdentityMatrix().
 Here you need to pass one parameter  - matrix dimension 
 (n - integer digit, which represent numbers of rows/columns for square matrix). Example:</p>

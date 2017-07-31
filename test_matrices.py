@@ -1,6 +1,7 @@
 import unittest
 import matrices
 import errors
+import decimal
 
 
 class TestMatrix(unittest.TestCase):
@@ -153,6 +154,9 @@ class TestMatrix(unittest.TestCase):
             I.multiply_by_number(-.78, "fg")
         # is Am still equal to AM even with precision = 20?
         Am = A.multiply_by_number(-1, 20)
+        self.assertTrue(Am.matrix_is_equal(AM))
+        n = decimal.Decimal('-1.0')
+        Am = A.multiply_by_number(n)
         self.assertTrue(Am.matrix_is_equal(AM))
 
     def test_15(self):
@@ -308,6 +312,50 @@ class TestMatrix(unittest.TestCase):
         i = matrices.IdentityMatrix(4)
         # determinant of identity matrix equal to 1
         self.assertEqual(i.matrix_determinant(), 1)
+        n = decimal.Decimal('4')
+        with self.assertRaises(errors.WrongInputType):
+            self.assertEqual(D.matrix_determinant(n), 640)
+
+    def test_19(self):
+        """ Testing add_number method"""
+        A = matrices.Matrix([[3, 2],
+                             [4, 4]])
+        B = matrices.Matrix([[4.1, 3.1],
+                             [5.1, 5.1]])
+        C = A.add_number(1.1)
+        self.assertTrue(C.matrix_is_equal(B))
+        O = matrices.ZeroMatrix(2, 2, number=1.1)
+        AO = A.matrix_addition(O)
+        self.assertTrue(B.matrix_is_equal(AO))
+        D = matrices.Matrix([[1, 2, 3],
+                             [4, 5, 6]])
+        E = matrices.Matrix([[0, 1, 2],
+                             [3, 4, 5]])
+        F = D.add_number(-1)
+        self.assertTrue(F.matrix_is_equal(E))
+        with self.assertRaises(errors.WrongElementType):
+            A.add_number(B)
+        with self.assertRaises(errors.WrongElementType):
+            A.add_number('one')
+        n = decimal.Decimal('1.1')
+        CA = A.add_number(n)
+        self.assertTrue(CA.matrix_is_equal(B))
+
+    def test_20(self):
+        """ testing subtract_number method"""
+        A = matrices.Matrix([[3, 2],
+                             [4, 4]])
+        B = matrices.Matrix([[1.9, 0.9],
+                             [2.9, 2.9]])
+        C = A.subtract_number(1.1)
+        self.assertTrue(B.matrix_is_equal(C))
+        D = matrices.Matrix([[4.1, 3.1],
+                             [5.1, 5.1]])
+        C = A.subtract_number(-1.1)
+        self.assertTrue(D.matrix_is_equal(C))
+        n = decimal.Decimal('1.1')
+        Cn = A.subtract_number(n)
+        self.assertTrue(B.matrix_is_equal(Cn))
 
 
 class TestZeroMatrix(unittest.TestCase):
@@ -322,6 +370,13 @@ class TestZeroMatrix(unittest.TestCase):
         self.assertFalse(C.is_diagonal_matrix())
         Z = matrices.Matrix([[0, 0], [0, 0]])
         self.assertTrue(C.matrix_is_equal(Z))
+        D = matrices.ZeroMatrix(3, 1, number=-4.5)
+        E = matrices.Matrix([[-4.5],
+                             [-4.5],
+                             [-4.5]])
+        self.assertTrue(D.matrix_is_equal(E))
+        with self.assertRaises(errors.WrongElementType):
+            F = matrices.ZeroMatrix(3, 4, number='ffg')
 
 
 class TestIdentityMatrix(unittest.TestCase):
