@@ -357,6 +357,81 @@ class TestMatrix(unittest.TestCase):
         Cn = A.subtract_number(n)
         self.assertTrue(B.matrix_is_equal(Cn))
 
+    def test_21(self):
+        """testing override standard math operations"""
+        # addition
+        A = matrices.Matrix([[1, 2],
+                             [3, 4]])
+        B = matrices.Matrix([[3, 2],
+                             [4, 7]])
+        C = matrices.Matrix([[4, 4],
+                             [7, 11]])
+        AB = A + B
+        BA = B + A
+        self.assertTrue(AB.matrix_is_equal(C))
+        self.assertTrue(BA.matrix_is_equal(C))
+        self.assertTrue(AB.matrix_is_equal(A.matrix_addition(B)))
+        D = matrices.Matrix([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9]])
+        with self.assertRaises(errors.WrongDimension):
+            AD = A + D
+        E = matrices.Matrix([[3.1, 4.1],
+                             [5.1, 6.1]])
+        k = 2.1
+        Ak = A + k
+        self.assertTrue(Ak.matrix_is_equal(E))
+        # we cant add matrix to a number
+        with self.assertRaises(TypeError):
+            Ak = k + A
+        # subtraction
+        F = matrices.Matrix([[-2, 0],
+                             [-1, -3]])
+        G = matrices.Matrix([[2, 0],
+                             [1, 3]])
+        AB = A - B
+        self.assertTrue(AB.matrix_is_equal(F))
+        BA = B - A
+        self.assertTrue(BA.matrix_is_equal(G))
+        Fk = matrices.Matrix([[-0.1, 0.9],
+                              [1.9, 2.9]])
+        k = 1.1
+        Ak = A - k
+        self.assertTrue(Ak.matrix_is_equal(Fk))
+        # cant subtract matrix from a number
+        with self.assertRaises(TypeError):
+            Ak = k - A
+        # multiplication
+        A = matrices.Matrix([[1, 2],
+                             [3, 4]])
+        B = matrices.Matrix([[5, 6],
+                             [7, 8],
+                             [1, 1]])
+        C = matrices.Matrix([[1, 2, 3],
+                             [4, 5, 6]])
+        D = matrices.Matrix([[9, 12, 15],
+                            [19, 26, 33]])
+        AC = A * C
+        self.assertTrue(AC.matrix_is_equal(D))
+        with self.assertRaises(errors.WrongDimension):
+            AB = A * B
+        k = -1.1
+        E = matrices.Matrix([[-1.1, -2.2],
+                             [-3.3, -4.4]])
+        Ak = A*k
+        self.assertTrue(Ak.matrix_is_equal(E))
+        with self.assertRaises(TypeError):
+            Ak = k*A
+        # division
+        k = decimal.Decimal(1.1)
+        E = matrices.Matrix([[0.91, 1.82],
+                             [2.73, 3.64]])
+        Ak = A/k
+        self.assertTrue(Ak.matrix_is_equal(E))
+        # division matrix on matrix not supported
+        with self.assertRaises(errors.GeneralMatrixError):
+            AB = A/B
+
 
 class TestZeroMatrix(unittest.TestCase):
     """class for testing ZeroMatrix subclass of Matrix"""

@@ -37,24 +37,29 @@ diagonal, square matrix, where all elements on the main diagonal equals to one. 
 <i>A.matrix_is_transpose(B)</i>
 <li><b>matrix_addition</b> - method for adding one matrix to another, if it's possible.
 A result of the addition will be returned as a new matrix:</li>
-<i>C = A.matrix_addition(B)</i>
+<i>C = A.matrix_addition(B)</i><br/>
+<i>C = A + B</i>
 <li><b>multiply_by_number</b> - method for multiplying a current matrix by a scalar('k'). 
 Also, it has a supplementary parameter of a precision - how much numbers will be after '.' symbol(default value is 2).
 Note: try not to go for a precision greater than 20(error exception will be raised).
 Method returns a new matrix:</li>
 <i>B = A.multiply_by_number(k)</i><br/>
-<i>B = A.multiply_by_number(k, precision)</i>
+<i>B = A.multiply_by_number(k, precision)</i><br/>
+<i>B = A * k</i> - note: cant use precision parameter explicitly(using default value).
 <li><b>matrix_subtraction</b> - method for subtracting one matrix from another( if it's possible). Returns a new matrix as a result: </li>
-<i>C = A.matrix_subtraction(B)</i>
+<i>C = A.matrix_subtraction(B)</i><br/>
+<i>C = A - B</i>
 <li><b>divide_by_number</b> - method for dividing a current matrix by a scalar('k'). 
 It has a supplementary parameter of a precision - how much numbers will be after '.' symbol(default value is 2).
 Note: try not to go for a precision greater than 20(error exception will be raised).
 Method returns a new matrix: </li>
 <i>B = A.divide_by_number(k)</i><br/>
-<i>B = A.divide_by_number(k, precision)</i>
+<i>B = A.divide_by_number(k, precision)</i><br/>
+<i>B = A/k</i> - note: cant use precision parameter explicitly(using default value).
 <li><b>matrix_multiplication</b> - method for multiplying a current matrix by a given matrix(which written in parentheses).
 Result will be returned in a form of a new matrix: </li>
-<i>C = A.matrix_multiplication(B)</i>
+<i>C = A.matrix_multiplication(B)</i><br/>
+<i>C = A * B </i>
 <li><b>matrix_determinant</b> - calculating matrix determinant, using Gauss-Jordan method(elementary row operations).
 It has a supplementary parameter of a precision with default value equal to 2. 
 Method returns numeric result:  </li>
@@ -70,10 +75,12 @@ That matrix, also, will  have appropriate dimension for addition operation.
 Note, that you can add a number to a matrix but not a vise versa. Returning type - Matrix().  
  Example of calling the method:</li>
 <i>B = A.add_number(k)</i>, where k - numeric type.<br/>
+<i>B = A + k</i><br/>
 <li><b>subtract_number</b> - method for subtracting number from a matrix. 
  This method is similar to add_number in his concept. Like in add_number you  can't subtract matrix from a number. 
   Returning type - Matrix(). Example of calling:   </li>
-<i>B = A.subtract_number(k)</i>, where k is a numeric type.</br> 
+<i>B = A.subtract_number(k)</i>, where k is a numeric type.<br/>
+<i>B = A - k</i><br/> 
 <li><b>matrix_show</b> - method for printing current matrix</li>
 <i>A.matrix_show()</i>
 <p>If you want to initialize a <b>Zero matrix</b> with a given sizes - use a child class of Matrix: ZeroMatrix().

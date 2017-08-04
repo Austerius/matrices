@@ -530,6 +530,37 @@ class Matrix(object):
             for row in self.A:
                 print(row)
 
+    # redefining standard operators
+    def __add__(self, other):
+        if isinstance(other, Matrix):
+            return self.matrix_addition(other)
+        elif isinstance(other, numbers.Number):
+            return self.add_number(other)
+        else:
+            raise errors.GeneralMatrixError("Not supported operation or operand type!")
+
+    def __sub__(self, other):
+        if isinstance(other, Matrix):
+            return self.matrix_subtraction(other)
+        elif isinstance(other, numbers.Number):
+            return self.subtract_number(other)
+        else:
+            raise errors.GeneralMatrixError("Not supported operation or operand type!")
+
+    def __mul__(self, other):
+        if isinstance(other, Matrix):
+            return self.matrix_multiplication(other)
+        elif isinstance(other, numbers.Number):
+            return self.multiply_by_number(other)
+        else:
+            raise errors.GeneralMatrixError("Not supported operation or operand type!")
+
+    def __truediv__(self, other):
+        if isinstance(other, numbers.Number):
+            return self.divide_by_number(other)
+        else:
+            raise errors.GeneralMatrixError("Not supported operation or operand type!")
+
 
 class ZeroMatrix(Matrix):
     """ class for initialization zero matrix
